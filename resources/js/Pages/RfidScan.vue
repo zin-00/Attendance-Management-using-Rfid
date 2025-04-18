@@ -77,7 +77,7 @@ const submitAttendance = async () => {
 <template>
     <GuestLayout>
         <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-            <h1 class="text-2xl font-bold mb-6 text-center">Attendance System</h1>
+            <h1 class="text-2xl font-bold mb-6 text-center">Tick Swipe</h1>
             
             <!-- Current Time Display -->
             <div class="mb-6 text-center">

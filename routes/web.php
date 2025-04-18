@@ -1,13 +1,18 @@
 <?php
 
-use App\Http\Controllers\ExportController;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Foundation\Application;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\PositionController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\File\FileController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Schedule\ScheduleController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schedule;
+use Inertia\Inertia;
+
+
 
 Route::get('/', function () {
     return Inertia::render('Auth/Login');
@@ -20,6 +25,8 @@ Route::get('/rfid-scan', function(){
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -36,11 +43,24 @@ Route::middleware('auth')->group(function () {
     Route::post('/employees/register', [EmployeeController::class, 'store'])->name('employee.store');
 
     // Attendance
+
     Route::get('/attendance/view', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('history.list');
+    Route::get('/attendance-records', [AttendanceController::class, 'record'])->name('records');
 
+    //Schedule
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedule');
+    Route::post('/schedule-store', [ScheduleController::class, 'store'])->name('schedule.store');
+    Route::delete('/schedule-delete/{id}', [ScheduleController::class, 'destroy'])->name('schedule.delete');
+    Route::put('/schedule-update/{id}', [ScheduleController::class, 'update'])->name('schedule.update');
 
+    Route::put('/schedule-update-status/{id}', [ScheduleController::class, 'isSet'])->name('isSet');
+
+    //Pdf
     Route::get('/api/attendance/export/pdf', [ExportController::class, 'export_attendance']);
+
+    //Excel
+    Route::post('/excel-import', [FileController::class, 'import'])->middleware('auth');
 
 });
 

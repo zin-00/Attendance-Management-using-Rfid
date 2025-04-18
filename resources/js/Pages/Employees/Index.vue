@@ -3,11 +3,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import dayjs from 'dayjs';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { TrashIcon, PencilIcon, DocumentMagnifyingGlassIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+// import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { TrashIcon, PencilIcon, DocumentMagnifyingGlassIcon, FunnelIcon, XMarkIcon,
+    ArrowDownTrayIcon, UserPlusIcon, ArrowPathIcon
+ } from '@heroicons/vue/24/outline';
 import debounce from 'lodash/debounce';
-
+import Modal from '@/Components/Modal.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useToast } from 'vue-toast-notification';
 const props = defineProps({
     employees: Object,
     error: String,
@@ -47,6 +54,23 @@ const cityFilter = ref(props.filters.city || '');
 const dateRangeStart = ref(props.filters.dateFrom || '');
 const dateRangeEnd = ref(props.filters.dateTo || '');
 const showAdvancedFilters = ref(false);
+const ModalState = ref(false);
+const message = ref('');
+const isLoading = ref(false);
+
+const selectedFile = ref(null);
+
+const handleFileChange = (event) => {
+  selectedFile.value = event.target.files[0];
+};
+
+const toast = useToast();
+const openModal = () => {
+    ModalState.value = true;
+};
+const closeModal = () => {
+    ModalState.value = false
+}
 
 const editEmployee = (employee) => router.get(route('employee.edit', {id: employee.id}));
 const addEmployee = () => router.get(route('employeeShowForm'));
@@ -106,6 +130,33 @@ const goToPage = (url) => {
         router.get(url);
     }
 };
+
+const upload = async () => {
+  if (!selectedFile.value) {
+    toast.error('Please select a file first');
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    const formData = new FormData();
+    formData.append('file', selectedFile.value); // Key must match backend expectation
+
+    const response = await axios.post('/excel-import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    toast.success(response.data.message || "Import successful");
+    closeModal();
+  } catch (error) {
+    console.error('Upload error:', error);
+    toast.error(error.response?.data?.message || "Import failed");
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
@@ -150,8 +201,9 @@ const goToPage = (url) => {
                         </button>
                     </div>
                     <div class="flex gap-2">
-                        <SecondaryButton @click="router.reload()">Refresh</SecondaryButton>
-                        <PrimaryButton @click="addEmployee">+ Add</PrimaryButton>
+                        <SecondaryButton @click="router.reload()" title="Refresh"> <ArrowPathIcon class="h-5 w-5" /></SecondaryButton>
+                        <SecondaryButton @click="addEmployee" title="Add User"><UserPlusIcon class="h-5 w-5"/></SecondaryButton>
+                        <SecondaryButton @click="openModal" title="Import Users"><ArrowDownTrayIcon class="h-5 w-5"/></SecondaryButton>
                     </div>
                 </div>
                 
@@ -295,6 +347,58 @@ const goToPage = (url) => {
                         <span v-html="link.label"></span>
                     </button>
                 </div>
+
+                <Modal :show="ModalState" @close="closeModal">
+                        <div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-sm mx-auto">
+                            <div class="space-y-4">
+                            <!-- Header -->
+                            <div class="text-center">
+                                <h2 class="text-lg font-semibold text-gray-800">Import Employee Data</h2>
+                                <p class="text-xs text-gray-500 mt-1">Upload Excel or CSV file</p>
+                            </div>
+
+                            <!-- File Input -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
+                                <div class="flex flex-col items-center px-4 py-6 border-2 border-gray-300 border-dashed rounded-md">
+                                <svg class="h-10 w-10 text-gray-400 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <label for="file-upload" class="cursor-pointer text-blue-600 text-sm hover:underline">
+                                    <span>Choose file</span>
+                                    <input 
+                                    id="file-upload" 
+                                    name="file" 
+                                    type="file" 
+                                    class="sr-only" 
+                                    @change="handleFileChange" 
+                                    accept=".xlsx, .xls, .csv"
+                                    required
+                                    />
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">.XLSX, .XLS, .CSV (max 10MB)</p>
+                                </div>
+                            </div>
+
+                            <!-- Selected File -->
+                            <div v-if="selectedFile" class="text-xs text-gray-700">
+                                <span class="font-medium">Selected:</span> {{ selectedFile.name }}
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex justify-end gap-2 pt-2">
+                                <SecondaryButton @click="closeModal">
+                                Cancel
+                                </SecondaryButton>
+                                <PrimaryButton @click="upload" :disabled="!selectedFile">
+                                Import
+                                </PrimaryButton>
+                            </div>
+                            </div>
+                        </div>
+                        </Modal>
+
+
             </div>
         </div>
     </AuthenticatedLayout>

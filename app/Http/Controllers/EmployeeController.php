@@ -122,14 +122,14 @@ class EmployeeController extends Controller
                 'country'                   => ['required', 'string'],
                 'hire_date'                 => ['required', 'date'],
                 'email'                     => ['required', 'email', 'unique:employees,email'],
-                'password'                  => ['required', 'string', 'min:8', 'confirmed'],            
+                // 'password'                  => ['nullable', 'string', 'min:8', 'confirmed'],            
                 'gender'                    => ['required', 'in:Male,Female,Other'],
                 'status'                    => ['required', 'in:Active,Inactive,Resigned,Banned'],
                 'position_id'               => ['required', 'exists:positions,id'],
                 'profile_image'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
 
         ]);
-            $validatedData['password'] = Hash::make($validatedData['password']);
+            // $validatedData['password'] = Hash::make($validatedData['password']);
             if ($request->hasFile('profile_image')) {
                 $imagePath = $request->file('profile_image')->store('profile_images', 'public');
                 $validatedData['profile_image'] = $imagePath;

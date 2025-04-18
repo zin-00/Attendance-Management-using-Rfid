@@ -45,8 +45,8 @@ const form = useForm({
     zip_code: props.employee?.zip_code || '',
     hire_date: props.employee?.hire_date || new Date().toISOString().split('T')[0],
     email: props.employee?.email || '',
-    password: '',
-    password_confirmation: '',
+    // password: '',
+    // password_confirmation: '',
     gender: props.employee?.gender || '',
     status: props.employee?.status || 'Active',
     position_id: props.employee?.position_id || '',
@@ -66,22 +66,22 @@ if (props.employee) {
     }
 }
 
-const passwordStrength = computed(() => {
-    if (!form.password) return 0;
-    let score = 0;
-    if (form.password.length >= 8) score++;
-    if (/[A-Z]/.test(form.password)) score++;
-    if (/[a-z]/.test(form.password)) score++;
-    if (/[0-9]/.test(form.password)) score++;
-    if (/[^A-Za-z0-9]/.test(form.password)) score++;
-    return score;
-});
+// const passwordStrength = computed(() => {
+//     if (!form.password) return 0;
+//     let score = 0;
+//     if (form.password.length >= 8) score++;
+//     if (/[A-Z]/.test(form.password)) score++;
+//     if (/[a-z]/.test(form.password)) score++;
+//     if (/[0-9]/.test(form.password)) score++;
+//     if (/[^A-Za-z0-9]/.test(form.password)) score++;
+//     return score;
+// });
 
-const passwordStrengthColor = computed(() => {
-    return ['bg-red-500', 'bg-yellow-500', 'bg-green-500'][Math.min(passwordStrength.value - 1, 2)];
-});
+// const passwordStrengthColor = computed(() => {
+//     return ['bg-red-500', 'bg-yellow-500', 'bg-green-500'][Math.min(passwordStrength.value - 1, 2)];
+// });
 
-const passwordStrengthWidth = computed(() => `${(passwordStrength.value / 5) * 100}%`);
+// const passwordStrengthWidth = computed(() => `${(passwordStrength.value / 5) * 100}%`);
 
 const emailIsValid = computed(() => {
     return !form.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
@@ -135,9 +135,7 @@ const currentStepIsValid = computed(() => {
     if (currentStep.value === 1) {
         return form.rfid_tag && form.first_name && form.last_name && form.birthdate;
     } else if (currentStep.value === 2) {
-        return form.email && emailIsValid.value && form.password &&
-               form.password_confirmation && form.password === form.password_confirmation &&
-               passwordStrength.value >= 3;
+        return form.email && emailIsValid.value;
     }
     return true;
 });
@@ -507,7 +505,7 @@ watch(() => page.props.flash?.error, (newMessage) => {
                                 </select>
                                 <InputError :message="form.errors.gender" class="mt-1 text-xs" />
                             </div>
-                            <div>
+                            <!-- <div>
                                 <label class="block text-sm font-medium text-gray-700">Password*</label>
                                 <TextInput v-model="form.password" type="password" class="mt-1 block w-full text-sm" required />
                                 <div class="mt-1 w-full bg-gray-200 rounded-full h-2">
@@ -518,8 +516,8 @@ watch(() => page.props.flash?.error, (newMessage) => {
                                     Password should include uppercase, lowercase, numbers and special characters
                                 </p>
                                 <InputError :message="form.errors.password" class="mt-1 text-xs" />
-                            </div>
-                            <div>
+                            </div> -->
+                            <!-- <div>
                                 <label class="block text-sm font-medium text-gray-700">Confirm Password*</label>
                                 <TextInput v-model="form.password_confirmation" type="password" class="mt-1 block w-full text-sm" required />
                                 <InputError :message="form.errors.password_confirmation" class="mt-1 text-xs" />
@@ -527,7 +525,7 @@ watch(() => page.props.flash?.error, (newMessage) => {
                                    class="text-xs text-red-500 mt-1">
                                     Passwords do not match
                                 </p>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     
