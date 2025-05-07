@@ -18,9 +18,7 @@ Route::get('/', function () {
     return Inertia::render('Auth/Login');
 });
 
-Route::get('/rfid-scan', function(){
-    return Inertia::render('RfidScan');
-});
+Route::get('/scan', [AttendanceController::class, 'scan_card'])->name('scan');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

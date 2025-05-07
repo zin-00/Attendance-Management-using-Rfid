@@ -15,11 +15,18 @@ use Inertia\Inertia;
 
 class AttendanceController extends Controller
 {
+    public function scan_card(){
+        $lastScan = Attendance::with('employee')->latest()->first();
+
+        return Inertia::render('Scan', [
+            'lastScan' => $lastScan
+        ]);
+    }
     public function index()
     {
+        $today = now()->toDateString();
         $attendance = Attendance::with('employee')
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+        ->whereDate('created_at', $today)
             ->paginate(10);
     
         return Inertia::render('Attendances/Index', [

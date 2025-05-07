@@ -15,6 +15,8 @@ const lastScanTime = ref(null);
 const current_time = ref(new Date());
 let interval = null;
 
+const attendance = ref(null);
+
 const form = useForm({
     rfid_tag: '',
 });
@@ -26,16 +28,23 @@ const updateTime = () =>{
 
 onMounted(() => {
     interval = setInterval(updateTime, 1000);
+    EventListener();
 });
 onUnmounted(() => {
     clearInterval(interval);
 });
-watch(() => form.rfid_tag, async (newValue) => {
-    if (newValue.length === 10 && !isSubmitting.value) {
-        await submitAttendance();
-    }
-});
+// watch(() => form.rfid_tag, async (newValue) => {
+//     if (newValue.length === 10 && !isSubmitting.value) {
+//         await submitAttendance();
+//     }
+// });
 
+const EventListener = () => {
+    window.Echo.channel('attendance')
+    .listen('.attendance.event', (e) => {
+        console.log('Event recieved', e);
+    });
+};
 const submitAttendance = async () => {
     isSubmitting.value = true;
     errorMessage.value = '';
@@ -75,8 +84,16 @@ const submitAttendance = async () => {
 </script>
 
 <template>
-    <GuestLayout>
-        <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div class="container grid">
+        <div class="">
+            <div class="p-5 min-w-[150px] max-w-[400px]">
+                <img class="h-[100px] w-[100px] rounded-lg bg-white shadow-lg" src="" alt="" srcset="">
+            </div>
+            <div class="p-5">
+                <h1>Name:</h1>
+            </div>
+        </div>
+        <div class="grid">
             <h1 class="text-2xl font-bold mb-6 text-center">Tick Swipe</h1>
             
             <!-- Current Time Display -->
@@ -94,6 +111,7 @@ const submitAttendance = async () => {
                     class="border p-3 rounded-lg w-full text-center text-lg"
                     maxlength="10"
                     autofocus
+                    @keyup.enter="submitAttendance"
                     :disabled="isSubmitting"
                 />
                 
@@ -113,5 +131,5 @@ const submitAttendance = async () => {
                 </div>
             </div>
         </div>
-    </GuestLayout>
+    </div>
 </template>
