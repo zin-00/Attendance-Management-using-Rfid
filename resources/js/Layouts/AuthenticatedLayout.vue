@@ -1,14 +1,11 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Sidebar from '@/Components/Sidebar.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import AttendanceLogo from '@/Components/AttendanceLogo.vue';
-
+import { BsUpcScan } from '@kalimahapps/vue-icons';
+import SideBar from '@/Components/SideBar.vue';
 const showingNavigationDropdown = ref(false);
 
 const sidebarState = ref(localStorage.getItem('sidebarState') || 'full');
@@ -20,7 +17,6 @@ onMounted(() => {
     }
   });
   
-  // Check for sidebar state changes every second as a fallback
   const intervalId = setInterval(() => {
     const currentState = localStorage.getItem('sidebarState');
     if (currentState !== sidebarState.value) {
@@ -46,7 +42,7 @@ onMounted(() => {
                                     <!-- <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     /> -->
-                                    <AttendanceLogo class="h-[60px] w-auto"/>
+                                    <BsUpcScan class="h-9 w-auto text-gray-700" />
                                 </Link>
                             </div>
 
@@ -199,10 +195,8 @@ onMounted(() => {
                 </div>
             </nav>
 
-            <!-- Sidebar Component -->
-            <Sidebar />
+            <SideBar />
 
-            <!-- Main Content Container with Dynamic Margins -->
             <div class="transition-all duration-300 ease-in-out pt-16"
                 :class="{
                     'lg:ml-64': sidebarState === 'full',

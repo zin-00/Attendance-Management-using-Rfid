@@ -14,11 +14,15 @@ use Inertia\Inertia;
 
 
 
-Route::get('/', function () {
-    return Inertia::render('Auth/Login');
-});
+// Route::get('/', function () {
+//     return Inertia::render('Auth/Login');
+// });
+// Route::get('/', function () {
+//     return Inertia::render('Attendance/Index');
+// });
 
-Route::get('/scan', [AttendanceController::class, 'scan_card'])->name('scan');
+
+Route::get('/', [AttendanceController::class, 'scan_card'])->name('scan');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -45,6 +49,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance/view', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('history.list');
     Route::get('/attendance-records', [AttendanceController::class, 'record'])->name('records');
+    Route::get('/attendance/statistics', [AttendanceController::class, 'statistics'])->name('statistics');
+    Route::get('/attendance-list', [AttendanceController::class, 'attendance']);
 
     //Schedule
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedule');
@@ -62,5 +68,11 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// routes/web.php
+Route::get('/test-broadcast', function() {
+    $attendance = \App\Models\Attendance::first();
+    broadcast(new \App\Events\UpdatedAttendance($attendance));
+    return "Event broadcasted";
+});
 
 require __DIR__.'/auth.php';

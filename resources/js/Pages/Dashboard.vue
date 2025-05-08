@@ -161,14 +161,14 @@ onMounted(() => {
     <div class="p-2 md:p-4 lg:p-6 bg-gray-100 min-h-screen">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6">
         <h1 class="text-xl md:text-2xl font-bold text-black mb-2 sm:mb-0">Attendance Dashboard</h1>
-        <div class="flex space-x-2">
+        <!-- <div class="flex space-x-2">
           <button @click="exportData('pdf')" class="px-3 py-1.5 md:px-4 md:py-2 bg-black text-white rounded-md hover:bg-gray-800 transition text-sm md:text-base">
             Export PDF
           </button>
           <button @click="exportData('csv')" class="px-3 py-1.5 md:px-4 md:py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition text-sm md:text-base">
             Export CSV
           </button>
-        </div>
+        </div> -->
       </div>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">

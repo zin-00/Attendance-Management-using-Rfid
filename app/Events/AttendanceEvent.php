@@ -29,7 +29,7 @@ class AttendanceEvent implements ShouldBroadcast
     {
         return [
             new Channel('attendance'),
-            new Channel('attendance.' . $this->attendance->employee_id),
+            // new Channel('attendance.' . $this->attendance->employee_id),
         ];
     }
 

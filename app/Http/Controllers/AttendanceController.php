@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\AttendanceEvent;
+use App\Events\UpdatedAttendance;
 use App\Models\Attendance;
 use App\Models\AttendanceSummary;
 use App\Models\Employee;
@@ -15,24 +16,39 @@ use Inertia\Inertia;
 
 class AttendanceController extends Controller
 {
-    public function scan_card(){
-        $lastScan = Attendance::with('employee')->latest()->first();
-
+    
+    public function scan_card()
+    {
+        $today = now()->toDateString();
+    
+        $lastScan = Attendance::with('employee.position')
+            ->whereDate('created_at', $today)
+            ->latest()
+            ->first();
+    
         return Inertia::render('Scan', [
             'lastScan' => $lastScan
         ]);
     }
+    
     public function index()
     {
+        return Inertia::render('Attendances/Index');
+    }
+
+    public function attendance() {
         $today = now()->toDateString();
-        $attendance = Attendance::with('employee')
-        ->whereDate('created_at', $today)
+    
+        $attendance = Attendance::with('employee.position')
+            ->whereDate('created_at', $today)
+            ->latest()
             ->paginate(10);
     
-        return Inertia::render('Attendances/Index', [
-            'attendance' => $attendance
+        return response()->json([
+            'attendance' => $attendance,
         ]);
     }
+    
 
     public function record()
     {
@@ -154,15 +170,15 @@ class AttendanceController extends Controller
             $request->validate([
                 'rfid_tag' => ['required', 'string', 'exists:employees,rfid_tag'],
             ]);
-    
+
             $employee = Employee::where('rfid_tag', $request->rfid_tag)->firstOrFail();
-    
+
             $current_time = now()->setTimezone('Asia/Manila');
             $time = $current_time->format('H:i');
             $date = $current_time->toDateString();
-    
+
             $schedule = Schedule::where('isSet', true)->firstOrFail();
-    
+
             $scan_type = $this->determineScanType($time, $schedule);
             if ($scan_type === 'UNKNOWN') {
                 return response()->json([
@@ -175,7 +191,7 @@ class AttendanceController extends Controller
                     'warning' => 'Duplicate scan detected. Please wait before scanning again.'
                 ], 400);
             }
-    
+
             $attendance = Attendance::firstOrNew([
                 'employee_id' => $employee->id,
                 'date' => $date
@@ -194,11 +210,12 @@ class AttendanceController extends Controller
                 $attendance->$scan_field = $time;
                 $attendance->status = $this->determineAttendanceStatus($attendance, $schedule);
             }
-    
+
             $attendance->work_hours = $this->calculateWorkHours($attendance);
             $attendance->save();
-    
+
             AttendanceEvent::dispatch($attendance);
+            UpdatedAttendance::dispatch($attendance->load('employee'));
 
             return response()->json([
                 'message' => 'Attendance recorded successfully for ' . $employee->first_name,
@@ -209,6 +226,7 @@ class AttendanceController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
     // Helper methods
     private function determineScanType($time, Schedule $schedule)

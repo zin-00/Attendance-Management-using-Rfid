@@ -2,14 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useToast } from 'vue-toast-notification';
-import Modal from '@/Components/Modal.vue';
+import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 
 const toast = useToast();
 const isLoading = ref(false);
 const filter_type = ref('all');
 const attendance = ref([]);
 const pagination = ref({});
-const ModalState = ref(false);
 
 const props = defineProps({
     attendance: {
@@ -18,37 +18,55 @@ const props = defineProps({
     }
 });
 
-attendance.value = props.attendance.data;
+attendance.value = props.attendance.data || [];
 pagination.value = {
     links: props.attendance.links || [],
     from: props.attendance.from || 0
 };
 
-const RealtimeListener = () => {
-    window.Echo.channel('attendance')
-    .listen('attendance.event', (e) => {
-        attendance.value.unshift(e.attendance);
-        console.log("Attendance: ", attendance.value)
-        
-        // If we have more than 50 records, remove the oldest
-        if (attendance.value.length > 50) {
-            attendance.value.pop();
-        }
-    });
+const { props: pageProps } = usePage();
+const authUser = computed(() => pageProps.auth.user);
+
+const initializeEcho = () => {
+    if (!window.Echo) {
+        console.error('Echo is not initialized');
+        return;
+    }
+
+    console.log('Initializing Echo channel for attendance updates');
+    
+    window.Echo.channel('attendanceUpdate')
+        .listen('.UpdatedAttendance', (e) => {
+            console.log('Received attendance update:', e);
+            updateAttendance(e.attendance);
+        });
 };
 
-const fetchAttendance = async (url = null) => {
-    try {
+const updateAttendance = (updatedAttendance) => {
+    const index = attendance.value.findIndex(a => a.id === updatedAttendance.id);
+    if (index !== -1) {
+        attendance.value[index] = updatedAttendance;
+    } else {
+        attendance.value.unshift(updatedAttendance);
+    }
+    
+    toast.success(`Attendance updated for ${updatedAttendance.employee?.first_name || 'employee'}`);
+};
+
+const fetchAttendance = async(url = null) => {
+    try{
         isLoading.value = true;
-        const response = await axios.get(url || route('attendance.index'));
-        attendance.value = response.data.data;
+        const response = await axios.get(url || '/attendance-list');
+        attendance.value = response.data.attendance.data;
+
         pagination.value = {
-            links: response.data.links,
-            from: response.data.from
+            links: response.data.attendance.links,
+            from: response.data.attendance.from
         };
-    } catch (error) {
+    }catch(error){
         toast.error('Failed to fetch attendance data');
-    } finally {
+        console.error('Error fetching attendance:', error);
+    }finally{
         isLoading.value = false;
     }
 };
@@ -61,7 +79,12 @@ const goToPage = (url) => {
 
 const filteredAttendance = computed(() => {
     return attendance.value.filter((record) => {
-        const hour = new Date(record.created_at).getHours();
+        if (!record.date) return true;
+        
+        const date = new Date(record.date);
+        if (isNaN(date.getTime())) return true;
+        
+        const hour = date.getHours();
         if (filter_type.value === 'morning') {
             return hour < 12;
         } else if (filter_type.value === 'afternoon') {
@@ -98,8 +121,7 @@ const formatTime = (time) => {
     });
 };
 
-
-const formatDate = (dateString, locale = 'en-US', options = {}) => {
+const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
 
     const date = new Date(dateString);
@@ -108,7 +130,7 @@ const formatDate = (dateString, locale = 'en-US', options = {}) => {
         return 'Invalid Date';
     }
 
-    const defaultOptions = {
+    return date.toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -116,19 +138,18 @@ const formatDate = (dateString, locale = 'en-US', options = {}) => {
         minute: '2-digit',
         second: '2-digit',
         hour12: true
-    };
-
-    return date.toLocaleString(locale, { ...defaultOptions, ...options });
+    });
 };
 
-
-
 onMounted(() => {
-    RealtimeListener();
+    initializeEcho();
+    fetchAttendance();
 });
 
 onUnmounted(() => {
-    window.Echo.leaveChannel('attendance');
+    if (window.Echo) {
+        window.Echo.leave(`attendance`);
+    }
 });
 </script>
 
@@ -146,8 +167,14 @@ onUnmounted(() => {
                     </select>
                 </div>
 
+                <!-- Loading indicator -->
+                <div v-if="isLoading" class="text-center py-4">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-t-blue-500 border-blue-200"></div>
+                    <p class="mt-2 text-gray-600">Loading attendance data...</p>
+                </div>
+
                 <!-- Table -->
-                <div class="overflow-x-auto">
+                <div v-else class="overflow-x-auto">
                     <table class="w-full border-collapse border text-sm">
                         <thead class="bg-gray-100">
                             <tr>
@@ -158,8 +185,6 @@ onUnmounted(() => {
                                 <th class="border p-2">Lunch Out</th>
                                 <th class="border p-2">Afternoon In</th>
                                 <th class="border p-2">Afternoon Out</th>
-                                <th class="border p-2">Evening In</th>
-                                <th class="border p-2">Evening Out</th>
                                 <th class="border p-2">Status</th>
                             </tr>
                         </thead>
@@ -189,23 +214,13 @@ onUnmounted(() => {
                                     </span>
                                 </td>
                                 <td class="border p-2">
-                                    <span class="px-2 py-1 rounded text-xs font-medium" :class="getTimeClass(attend.evening_in)">
-                                        {{ formatTime(attend.evening_in) }}
-                                    </span>
-                                </td>
-                                <td class="border p-2">
-                                    <span class="px-2 py-1 rounded text-xs font-medium" :class="getTimeClass(attend.evening_out)">
-                                        {{ formatTime(attend.evening_out) }}
-                                    </span>
-                                </td>
-                                <td class="border p-2">
                                     <span class="px-2 py-1 rounded text-xs font-medium" :class="getStatusClass(attend.status)">
                                         {{ attend.status ?? 'N/A' }}
                                     </span>
                                 </td>
                             </tr>
                             <tr v-if="filteredAttendance.length === 0">
-                                <td class="border p-2 text-center py-8 text-gray-500" colspan="10">
+                                <td class="border p-2 text-center py-8 text-gray-500" colspan="8">
                                     No attendance records found.
                                 </td>
                             </tr>

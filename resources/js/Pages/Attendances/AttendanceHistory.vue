@@ -220,7 +220,7 @@ const exportAttendance = async (format = 'csv') => {
         <div class="p-4 bg-gray-50 border-b border-gray-200">
           <div class="flex justify-between items-center">
             <h2 class="text-xl font-semibold text-gray-800">Attendance History</h2>
-            <div class="flex space-x-2">
+            <!-- <div class="flex space-x-2">
               <button 
                 @click="exportAttendance('csv')" 
                 class="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition"
@@ -233,7 +233,7 @@ const exportAttendance = async (format = 'csv') => {
                 :disabled="isLoading">
                 Export PDF
               </button>
-            </div>
+            </div> -->
           </div>
         </div>
         
