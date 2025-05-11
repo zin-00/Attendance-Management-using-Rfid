@@ -20,9 +20,6 @@ class AnalyticsController extends Controller
         }
     }
     
-    /**
-     * Get monthly attendance data for a specific year
-     */
     private function getMonthlyAttendanceData($year)
     {
         $months = [];
@@ -30,7 +27,6 @@ class AnalyticsController extends Controller
         $absentData = [];
         $lateData = [];
         
-        // Get months in English
         for ($i = 1; $i <= 12; $i++) {
             $months[] = Carbon::create($year, $i, 1)->format('M');
         }
@@ -77,9 +73,7 @@ class AnalyticsController extends Controller
         ]);
     }
     
-    /**
-     * Get yearly attendance data for multiple years
-     */
+
     private function getYearlyAttendanceData()
     {
         // Get the earliest year in the database
@@ -136,9 +130,6 @@ class AnalyticsController extends Controller
         ]);
     }
     
-    /**
-     * Get employee status data for graphing
-     */
     public function getEmployeeStatusData(Request $request)
     {
         $year = $request->input('year', Carbon::now()->year);
@@ -151,9 +142,6 @@ class AnalyticsController extends Controller
         }
     }
 
-    /**
-     * Get monthly employee status data for a specific year
-     */
     private function getMonthlyEmployeeStatusData($year)
     {
         $months = [];
@@ -166,7 +154,6 @@ class AnalyticsController extends Controller
             $months[] = Carbon::create($year, $i, 1)->format('M');
         }
         
-        // Get new hires for each month (employees marked as Active with start_date in that month)
         $newHiresCounts = DB::table('employees')
             ->select(DB::raw('MONTH(start_date) as month, COUNT(*) as count'))
             ->whereYear('start_date', $year)
@@ -175,9 +162,6 @@ class AnalyticsController extends Controller
             ->pluck('count', 'month')
             ->toArray();
             
-        // Get existing employees for each month (active employees not hired in that month)
-        // This calculation requires joining multiple queries or doing some logic to count
-        // For simplicity, we'll use the Active count minus new hires
         $activeCounts = DB::table('employees')
             ->select(DB::raw('MONTH(status_date) as month, COUNT(*) as count'))
             ->whereYear('status_date', $year)
@@ -186,7 +170,6 @@ class AnalyticsController extends Controller
             ->pluck('count', 'month')
             ->toArray();
             
-        // Get resigned employee counts for each month
         $resignedCounts = DB::table('employees')
             ->select(DB::raw('MONTH(status_date) as month, COUNT(*) as count'))
             ->whereYear('status_date', $year)
@@ -201,7 +184,7 @@ class AnalyticsController extends Controller
             // Existing employees = active - new hires
             $existingData[] = ($activeCounts[$i] ?? 0) - ($newHiresCounts[$i] ?? 0);
             if ($existingData[count($existingData) - 1] < 0) {
-                $existingData[count($existingData) - 1] = 0; // Ensure we don't have negative values
+                $existingData[count($existingData) - 1] = 0;
             }
             $resignedData[] = $resignedCounts[$i] ?? 0;
         }
@@ -214,9 +197,6 @@ class AnalyticsController extends Controller
         ]);
     }
     
-    /**
-     * Get yearly employee status data for multiple years
-     */
     private function getYearlyEmployeeStatusData()
     {
         // Get the earliest year in the database
@@ -275,10 +255,7 @@ class AnalyticsController extends Controller
             'resigned' => $resignedData
         ]);
     }
-    
-    /**
-     * Get available years for filtering
-     */
+
     public function getAvailableYears()
     {
         $attendanceYears = DB::table('attendance')
@@ -299,17 +276,13 @@ class AnalyticsController extends Controller
         ]);
     }
     
-    /**
-     * Export analytics data
-     */
+
     public function exportData(Request $request)
     {
         $format = $request->input('format', 'csv');
         $year = $request->input('year', Carbon::now()->year);
         $periodType = $request->input('period_type', 'monthly');
-        
-        // Implementation would depend on what export libraries you're using
-        // This is just a placeholder
+
         return response()->json([
             'success' => true,
             'message' => 'Export functionality would be implemented here'

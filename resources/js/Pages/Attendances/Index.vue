@@ -49,8 +49,7 @@ const updateAttendance = (updatedAttendance) => {
     } else {
         attendance.value.unshift(updatedAttendance);
     }
-    
-    toast.success(`Attendance updated for ${updatedAttendance.employee?.first_name || 'employee'}`);
+    // toast.success(`Attendance updated for ${updatedAttendance.employee?.first_name || 'employee'}`);
 };
 
 const fetchAttendance = async(url = null) => {
@@ -175,21 +174,21 @@ onUnmounted(() => {
 
                 <!-- Table -->
                 <div v-else class="overflow-x-auto">
-                    <table class="w-full border-collapse border text-sm">
+                    <table class="w-full border-collapse border text-[10px]">
                         <thead class="bg-gray-100">
                             <tr>
                                 <th class="border p-2">#</th>
                                 <th class="border p-2">Name</th>
                                 <th class="border p-2">Date</th>
-                                <th class="border p-2">Morning In</th>
-                                <th class="border p-2">Lunch Out</th>
-                                <th class="border p-2">Afternoon In</th>
-                                <th class="border p-2">Afternoon Out</th>
+                                <th class="border p-2">IN <i class="text-[10px]">(Morning)</i></th>
+                                <th class="border p-2">OUT <i class="text-[10px]">(Morning)</i></th>
+                                <th class="border p-2">IN <i class="text-[10px]">(Afternoon)</i></th>
+                                <th class="border p-2">OUT <i class="text-[10px]">(Afternoon)</i></th>
                                 <th class="border p-2">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(attend, index) in filteredAttendance" :key="attend.id" class="hover:bg-gray-50 text-center">
+                            <tr v-for="(attend, index) in filteredAttendance" :key="attend.id" class="hover:bg-gray-50 text-center text-[12px]">
                                 <td class="border p-2">{{ pagination.from ? pagination.from + index : index + 1 }}</td>
                                 <td class="border p-2">{{ attend.employee?.first_name ?? 'N/A' }} {{ attend.employee?.last_name ?? 'N/A' }}</td>
                                 <td class="border p-2">{{ formatDate(attend.date) }}</td>

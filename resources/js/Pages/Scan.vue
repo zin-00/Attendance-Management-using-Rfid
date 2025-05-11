@@ -24,7 +24,6 @@ let echoChannel = null;
 
 const isAutocompleteEnabled = ref(true);
 
-// Initialize with the prop data if available
 const lastScanData = ref(props.lastScan || null);
 
 const form = useForm({
@@ -44,7 +43,6 @@ onMounted(() => {
 
 onUnmounted(() => {
     clearInterval(interval);
-    // Clean up Echo listener if it exists
     if (echoChannel) {
         echoChannel.stopListening('.UpdatedAttendance');
     }
@@ -64,10 +62,8 @@ const setupEventListener = () => {
         echoChannel = window.Echo.channel('attendance');
         echoChannel.listen('.UpdatedAttendance', (e) => {
             console.log('Event received', e);
-            // Update the last scan details if available
             if (e.attendance) {
                 lastScanData.value = e.attendance;
-                // Make sure we're not in loading state
                 isSubmitting.value = false;
             }
         });
@@ -93,7 +89,6 @@ const submitAttendance = async () => {
         const scanType = response.data.attendance.scan_type;
         const statusText = response.data.attendance.status;
         
-        // Store the last scan information
         lastScanData.value = response.data.attendance;
         
         toast.success(`${message} (${scanType} - ${statusText})`, { position: 'top-right' });
@@ -102,7 +97,7 @@ const submitAttendance = async () => {
     } catch (e) {
         console.error('Error submitting attendance:', e);
         const message = e.response?.data?.error || 'Failed to submit attendance';
-        toast.error(message, { position: 'top-right' });
+        // toast.error(message, { position: 'top-right' });
         errorMessage.value = message;
 
         if(message.includes('Restricted to scan')){
@@ -115,10 +110,8 @@ const submitAttendance = async () => {
     }
 };
 
-// Add a timeout to reset loading state in case of network issues
 watch(isSubmitting, (newVal) => {
     if (newVal === true) {
-        // Set a timeout to reset the loading state after 5 seconds if it hasn't been reset
         setTimeout(() => {
             if (isSubmitting.value === true) {
                 isSubmitting.value = false;
